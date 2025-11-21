@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+env/
+*.egg-info/
+
+# Data
+data/
+dataset/
+devign/
+*.jsonl
+
+# Logs
+logs/
+*.log
+
+# Ollama models
+ollama/
+root/.ollama/
+
+# Cache
+.cache/
+tmp/
