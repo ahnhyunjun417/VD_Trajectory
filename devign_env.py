@@ -19,7 +19,7 @@ def parse_action(action: str):
     return name.strip(), arg or None
 
 class DevignEnv:
-    def __init__(self, code, label, max_steps=20):
+    def __init__(self, code, label, max_steps=10):
         self.code = code
         self.label = int(label)  # 0 = safe, 1 = vulnerable
         self.max_steps = max_steps
@@ -80,13 +80,13 @@ class DevignEnv:
             self.suspected_line = self.analyzer.identify_vulnerable_line()
 
         # If agent reports vulnerability, evaluate correctness
-        elif action == "report_vulnerability":
+        elif name == "report_vulnerability":
             # Correct only if this function is truly vulnerable
             reward = 1 if self.label == 1 else 0
             done = True
 
         # If agent calls stop()
-        elif action == "stop()":
+        elif name == "stop()":
             reward = 1 if self.label == 0 else 0
             done = True
 

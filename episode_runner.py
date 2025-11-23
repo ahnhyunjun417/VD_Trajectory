@@ -55,7 +55,7 @@ def run_multiple_episodes(
     if only_vulnerable:
         indices = [i for i in indices if labels[i] == 1]
 
-    print(f"Total train samples: {len(codes)} (after filter: {len(indices)})")
+    print(f"Total samples: {len(codes)} (after filter: {len(indices)})")
 
     logger = TrajectoryLogger(output_dir=output_dir, use_jsonl=use_jsonl)
 
@@ -69,7 +69,7 @@ def run_multiple_episodes(
     for ep_id, (code, label) in tqdm(enumerate(zip(codes, labels))):
         stats["label_counts"][label] += 1
 
-        env = DevignEnv(code, label, max_steps=20)
+        env = DevignEnv(code, label, max_steps=10)
         episode_data = run_episode(
             env=env,
             logger=logger,

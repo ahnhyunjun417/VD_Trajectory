@@ -16,6 +16,19 @@ PATTERN_ACTIONS = [
     "check_pattern('use_after_free')",
 ]
 
+ACTION_LIST = [
+    "summarize_code()",
+    # "list_variables()",
+    # "list_functions()",
+    # "list_dataflows()",
+    "check_pattern('buffer_overflow')",
+    "check_pattern('null_deref')",
+    "check_pattern('use_after_free')",
+    # "identify_vulnerable_line()",
+    "report_vulnerability(line_number)",
+    "stop()",
+]
+
 def validate_action(action: str) -> str:
     action = action.strip()
     if action in VALID_ACTIONS_NO_ARG or action in PATTERN_ACTIONS:
@@ -24,7 +37,7 @@ def validate_action(action: str) -> str:
     if action.startswith("report_vulnerability(") and action.endswith(")"):
         return action
     
-    return "Failed to parse action"
+    return action
 
 def build_prompt(state: Dict[str, Any]) -> str:
     code = state["code"]
@@ -36,9 +49,14 @@ def build_prompt(state: Dict[str, Any]) -> str:
     pattern_results = state["pattern_results"]
     suspected_line = state["suspected_line"]
 
-    history_str = "\n- ".join(history)
+    history_str = "\n- " + "\n- ".join(history)
+    left_actions = []
+    for action in ACTION_LIST:
+        if action not in history:
+            left_actions.append(action)
+    left_actions_str = "\n- " + "\n- ".join(left_actions) if len(left_actions) > 0 else "(none)"
 
-    summary_str = f"{summary}" if summary is not None else "(not computed)"
+    summary_str = f"{summary}" if summary is not None else "(unknown)"
     vars_str = ", ".join(variables) if variables else "(unknown)"
     funcs_str = ", ".join(functions) if functions else "(unknown)"
     flows_str = ", ".join([f"{src}->{dst}" for src, dst in dataflows]) if dataflows else "(unknown)"
@@ -50,51 +68,41 @@ def build_prompt(state: Dict[str, Any]) -> str:
 
     suspected_str = str(suspected_line) if suspected_line is not None else "(unknown)"
 
-    system_prompt = f"""
+    prompt = f"""
 You are a vulnerability detection agent analyzing a C/C++ function.
 Representative vulnerabilities include buffer overflows, null pointer dereferences, and use-after-free errors.
 You make decisions step by step using a fixed set of actions.
 
 VALID ACTIONS:
-1. summarize_code(): Provides a high-level structural summary of the function
-2. list_variables(): Returns the list of variables declared in the function.
-3. list_functions(): Returns all function calls found in the code.
-4. list_dataflows(): Returns simple dataflow relations of the form source -> destination
-5. check_pattern("buffer_overflow"): Returns True if the code contains buffer overflow indicators:
-      e.g., strcpy, strcat, sprintf, gets, memcpy, or array writes without bounds checks.
-6. check_pattern("null_deref"): Returns True if pointers are used without any NULL-check.
-7. check_pattern("use_after_free"): Returns True if a variable is freed and later reused.
-8. identify_vulnerable_line(): Returns the most suspicious line number. Otherwise, returns -1
-9. report_vulnerability(<line_number>): Final action. Report that the function is vulnerable and specify the line number
-10. stop(): Use when you conclude the function is safe or no more useful actions remain.
+{left_actions_str}
+
+CURRENT CODE:
+{code}
+
+CURRENT ANALYSIS STATE:
+- code summarization: {summary_str}
+- list_variables: {vars_str}
+- list_functions: {funcs_str}
+- list_dataflows: {flows_str}
+- check_pattern:
+{pattern_str}
+- identify_vulnerable_line: {suspected_str}
 
 RULES:
 - You MUST output exactly ONE action per step.
 - Do NOT output explanations or natural language.
 - Do NOT output multiple actions.
-- Use only actions in the VALID ACTIONS list.
-""".strip()
-    
-    user_prompt = f"""
-CURRENT CODE:
-{code}
-
-CURRENT ANALYSIS STATE:
-- summary: {summary_str}
-- variables: {vars_str}
-- function calls: {funcs_str}
-- dataflows: {flows_str}
-- pattern results:
-{pattern_str}
-- suspected vulnerable line: {suspected_str}
-
-ACTION HISTORY:
-- {history_str}
+- Use only actions in the updated VALID ACTIONS list.
+- Before using report_vulnerability or stop(), You should eventually perform other actions at least once:
+- There are two final actions: report_vulnerability(line_number) and stop().
+- Use report_vulnerability(line_number) when you are certain about the vulnerability.
+    Example: report_vulnerability(42)
+- Use stop() when you conclude the function is safe.
 
 Next action:
 """.strip()
 
-    return {"system": system_prompt, "user": user_prompt}
+    return prompt
 
 
 def agent_policy(state: Dict[str, Any], llm_client: OllamaClient) -> str:

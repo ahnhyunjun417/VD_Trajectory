@@ -13,8 +13,7 @@ class OllamaClient:
             json={
                 "model": self.model,
                 "messages": [
-                    {"role": "system", "content": prompt["system"]},
-                    {"role": "user", "content": prompt["user"]}
+                    {"role": "user", "content": prompt}
                 ],
                 "stream": False,
             },
