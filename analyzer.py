@@ -14,13 +14,13 @@ class SimpleStaticAnalyzer:
     def summarize_code(self) -> Dict:
         return {
             "num_lines": len(self.lines),
-            "has_loops": any(("for(" in l or "while(" in l) for l in self.lines),
-            "uses_pointers": any(("*" in l or "->" in l) for l in self.lines),
-            "has_array": any("[" in l and "]" in l for l in self.lines),
+            "loops": any(("for(" in l or "while(" in l) for l in self.lines),
+            "pointers": any(("*" in l or "->" in l) for l in self.lines),
+            "arrays": any("[" in l and "]" in l for l in self.lines),
             "calls": self.list_functions(),
         }
 
-    def is_comment_or_empty(line: str) -> bool:
+    def is_comment_or_empty(self, line: str) -> bool:
         s = line.strip()
         return not s or s.startswith("//") or s.startswith("/*") or s.startswith("*")
 

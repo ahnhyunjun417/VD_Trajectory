@@ -71,10 +71,10 @@ class DevignEnv:
             self.dataflows = self.analyzer.list_dataflows()
 
         elif name == "list_freed_variables":
-            self.freed_variables = self.analyzer.list_dataflows()
+            self.freed_variables = self.analyzer.list_freed_variables()
 
         elif name == "list_null_assigned_variables":
-            self.null_assigned_variables = self.analyzer.list_dataflows()
+            self.null_assigned_variables = self.analyzer.list_null_assigned_variables()
 
         elif name == "check_pattern":
             if arg == "buffer_overflow":

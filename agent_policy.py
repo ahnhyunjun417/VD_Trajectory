@@ -55,7 +55,13 @@ def build_prompt(state: Dict[str, Any]) -> str:
 
     history_str = "\n- " + "\n- ".join(history)
     left_actions = []
+    for action in ACTION_LIST:
+        if action in history:
+            continue
+        left_actions.append(action)
     left_actions_str = "\n- " + "\n- ".join(left_actions) if len(left_actions) > 0 else "(none)"
+    # print("Left actions:", left_actions)
+    # print("History:", history)
 
     summary_str = f"{summary}" if summary is not None else "(unknown)"
     # vars_str = ", ".join(variables) if variables else "(unknown)"
@@ -77,14 +83,11 @@ You are a vulnerability detection agent analyzing a C/C++ function.
 Representative vulnerabilities include buffer overflows, null pointer dereferences, and use-after-free errors.
 You make decisions step by step using a fixed set of actions.
 
-VALID ACTIONS:
-{left_actions_str}
-
-ACTION HISTORY:
-{history_str}
-
 CURRENT CODE:
 {code}
+
+VALID ACTIONS:
+{left_actions_str}
 
 CURRENT ANALYSIS STATE:
 - code summarization: {summary_str}
@@ -95,17 +98,16 @@ CURRENT ANALYSIS STATE:
 RULES:
 - You MUST output exactly ONE action per step.
 - Do NOT output explanations or natural language.
-- Do NOT output multiple actions.
-- Use only actions in the updated VALID ACTIONS list.
-- Use list_variables(), list_freed_variables(), and list_null_assigned_variables() to gather information.
-- After gathering sufficient information, use check_pattern(pattern_name) to check for specific vulnerability patterns.
-- There are two final actions: report_vulnerability(line_number) and stop().
-- Use report_vulnerability(line_number) when you are certain about the vulnerability.
+- Use only actions in the updated current VALID ACTIONS list.
+- Do NOT repeat actions already taken. ONLY USE ACTIONS IN THE UPDATED VALID ACTIONS LIST.
+- Two final actions: report_vulnerability(line_number) and stop().
+- report_vulnerability(line_number): when you are certain about the vulnerability.
     Example: report_vulnerability(42)
-- Use stop() when you conclude the function is safe.
+- stop(): when you conclude the function is safe.
 
 Next action:
 """.strip()
+
 
     return prompt
 
