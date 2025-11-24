@@ -29,7 +29,7 @@ ACTION_LIST = [
     "check_pattern('null_deref')",
     "check_pattern('use_after_free')",
     # "identify_vulnerable_line()",
-    "report_vulnerability(line_number)",
+    "report_vulnerability()",
     "stop()",
 ]
 
@@ -93,17 +93,16 @@ CURRENT ANALYSIS STATE:
 - code summarization: {summary_str}
 - check_pattern:
 {pattern_str}
-- identify_vulnerable_line: {suspected_str}
 
 RULES:
 - You MUST output exactly ONE action per step.
 - Do NOT output explanations or natural language.
 - Use only actions in the updated current VALID ACTIONS list.
 - Do NOT repeat actions already taken. ONLY USE ACTIONS IN THE UPDATED VALID ACTIONS LIST.
-- Two final actions: report_vulnerability(line_number) and stop().
-- report_vulnerability(line_number): when you are certain about the vulnerability.
-    Example: report_vulnerability(42)
-- stop(): when you conclude the function is safe.
+
+FINAL ACTION CONDITIONS:
+- If all check_pattern results are False, stop()
+- If at least one check_pattern result is True → report_vulnerability()
 
 Next action:
 """.strip()
