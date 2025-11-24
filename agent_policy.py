@@ -3,9 +3,11 @@ from ollama_client import OllamaClient
 
 VALID_ACTIONS_NO_ARG = [
     "summarize_code()",
-    "list_variables()",
+    # "list_variables()",
     "list_functions()",
-    "list_dataflows()",
+    # "list_dataflows()",
+    "list_freed_variables()",
+    "list_null_assigned_variables()",
     "identify_vulnerable_line()",
     "stop()",
 ]
@@ -19,8 +21,10 @@ PATTERN_ACTIONS = [
 ACTION_LIST = [
     "summarize_code()",
     # "list_variables()",
-    # "list_functions()",
+    "list_functions()",
     # "list_dataflows()",
+    "list_freed_variables()",
+    "list_null_assigned_variables()",
     "check_pattern('buffer_overflow')",
     "check_pattern('null_deref')",
     "check_pattern('use_after_free')",
@@ -51,18 +55,18 @@ def build_prompt(state: Dict[str, Any]) -> str:
 
     history_str = "\n- " + "\n- ".join(history)
     left_actions = []
-    for action in ACTION_LIST:
-        if action not in history:
-            left_actions.append(action)
     left_actions_str = "\n- " + "\n- ".join(left_actions) if len(left_actions) > 0 else "(none)"
 
     summary_str = f"{summary}" if summary is not None else "(unknown)"
-    vars_str = ", ".join(variables) if variables else "(unknown)"
-    funcs_str = ", ".join(functions) if functions else "(unknown)"
-    flows_str = ", ".join([f"{src}->{dst}" for src, dst in dataflows]) if dataflows else "(unknown)"
+    # vars_str = ", ".join(variables) if variables else "(unknown)"
+    # funcs_str = ", ".join(functions) if functions else "(unknown)"
+    # flows_str = ", ".join([f"{src}->{dst}" for src, dst in dataflows]) if dataflows else "(unknown)"
 
     pattern_str_lines = []
     for k, v in pattern_results.items():
+        if v is None:
+            pattern_str_lines.append(f"{k}: (unknown)")
+            continue
         pattern_str_lines.append(f"{k}: {v}")
     pattern_str = "\n".join(pattern_str_lines)
 
@@ -76,14 +80,14 @@ You make decisions step by step using a fixed set of actions.
 VALID ACTIONS:
 {left_actions_str}
 
+ACTION HISTORY:
+{history_str}
+
 CURRENT CODE:
 {code}
 
 CURRENT ANALYSIS STATE:
 - code summarization: {summary_str}
-- list_variables: {vars_str}
-- list_functions: {funcs_str}
-- list_dataflows: {flows_str}
 - check_pattern:
 {pattern_str}
 - identify_vulnerable_line: {suspected_str}
@@ -93,7 +97,8 @@ RULES:
 - Do NOT output explanations or natural language.
 - Do NOT output multiple actions.
 - Use only actions in the updated VALID ACTIONS list.
-- Before using report_vulnerability or stop(), You should eventually perform other actions at least once:
+- Use list_variables(), list_freed_variables(), and list_null_assigned_variables() to gather information.
+- After gathering sufficient information, use check_pattern(pattern_name) to check for specific vulnerability patterns.
 - There are two final actions: report_vulnerability(line_number) and stop().
 - Use report_vulnerability(line_number) when you are certain about the vulnerability.
     Example: report_vulnerability(42)

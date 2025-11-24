@@ -35,6 +35,8 @@ class DevignEnv:
         self.variables = None
         self.functions = None
         self.dataflows = None
+        self.freed_variables = None
+        self.null_assigned_variables = None
         self.pattern_results = {
             "buffer_overflow": None,
             "null_deref": None,
@@ -68,13 +70,22 @@ class DevignEnv:
         elif name == "list_dataflows":
             self.dataflows = self.analyzer.list_dataflows()
 
+        elif name == "list_freed_variables":
+            self.freed_variables = self.analyzer.list_dataflows()
+
+        elif name == "list_null_assigned_variables":
+            self.null_assigned_variables = self.analyzer.list_dataflows()
+
         elif name == "check_pattern":
             if arg == "buffer_overflow":
-                self.pattern_results["buffer_overflow"] = self.analyzer.detect_buffer_overflow()
+                # self.pattern_results["buffer_overflow"] = self.analyzer.detect_buffer_overflow()
+                self.pattern_results["buffer_overflow"] = self.analyzer.detect_buffer_overflow_v2(self.functions)
             elif arg == "null_deref":
-                self.pattern_results["null_deref"] = self.analyzer.detect_null_deref()
+                # self.pattern_results["null_deref"] = self.analyzer.detect_null_deref()
+                self.pattern_results["null_deref"] = self.analyzer.detect_null_deref_v2(self.freed_variables)
             elif arg == "use_after_free":
-                self.pattern_results["use_after_free"] = self.analyzer.detect_use_after_free()
+                # self.pattern_results["use_after_free"] = self.analyzer.detect_use_after_free()
+                self.pattern_results["use_after_free"] = self.analyzer.detect_use_after_free_v2(self.null_assigned_variables)
 
         elif name == "identify_vulnerable_line":
             self.suspected_line = self.analyzer.identify_vulnerable_line()
@@ -106,6 +117,8 @@ class DevignEnv:
             "variables": self.variables,
             "functions": self.functions,
             "dataflows": self.dataflows,
+            "freed_variables": self.freed_variables,
+            "null_assigned_variables": self.null_assigned_variables,
             "pattern_results": dict(self.pattern_results),
             "suspected_line": self.suspected_line,
         }
