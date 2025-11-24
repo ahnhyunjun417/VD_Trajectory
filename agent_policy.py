@@ -102,7 +102,7 @@ RULES:
 
 FINAL ACTION CONDITIONS:
 - If all check_pattern results are False, stop()
-- If at least one check_pattern result is True → report_vulnerability()
+- If at least one check_pattern result is True, report_vulnerability()
 
 Next action:
 """.strip()
