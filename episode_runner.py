@@ -120,7 +120,7 @@ if __name__ == "__main__":
             dataset=dataset[dataset_name],
             num_episodes=args.n_epsds,
             llm_client=llm,
-            output_dir=f"./dataset/devign_runs/{dataset_name}",
+            output_dir=f"./dataset/devign_runs/{model_name}/{dataset_name}",
             use_jsonl=False,       # use_jsonl=True: all episodes in one JSONL file
             only_vulnerable=False  # only_vulnerable=True: only run on vulnerable samples
         )
