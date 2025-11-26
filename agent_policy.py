@@ -101,8 +101,8 @@ RULES:
 - Do NOT repeat actions already taken. ONLY USE ACTIONS IN THE UPDATED VALID ACTIONS LIST.
 
 FINAL ACTION CONDITIONS:
-- If all check_pattern results are False, stop()
-- If at least one check_pattern result is True, report_vulnerability()
+- If at least one check_pattern result is True, "report_vulnerability()"
+- If ALL check_pattern results are False or Unknown, "stop()"
 
 Next action:
 """.strip()

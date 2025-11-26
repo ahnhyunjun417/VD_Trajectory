@@ -1,3 +1,4 @@
+import argparse
 import time
 import os
 import random
@@ -7,6 +8,13 @@ from dataset_loader import load_devign
 from devign_env import DevignEnv
 from agent_policy import agent_policy
 from ollama_client import OllamaClient
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--url", type=str, required=False, default="http://localhost:11434/api/chat", help="Ollama API URL")
+parser.add_argument("--model", type=str, required=False, default="llama3.2", help="[llama3.2:3b, mistral:7b, qwen3:8b, llama3.1:8b, codellama:7b, deepseek-coder:6.7b, qwen:2.5-7b, qwen2.5-coder:7b]")
+parser.add_argument("--n_epsds", type=int, required=False, default=10, help="Num of episodes for each dataset split (0 = all samples)")
+parser.add_argument("--seed", type=int, required=False, default=42, help="Random seed")
+args = parser.parse_args()
 
 def run_episode(env: DevignEnv, llm_client, logger: TrajectoryLogger, episode_id: int):
     t0 = time.time()
@@ -66,7 +74,7 @@ def run_multiple_episodes(
         "label_counts": {0: 0, 1: 0}
     }
 
-    for ep_id, (code, label) in tqdm(enumerate(zip(codes, labels))):
+    for ep_id, (code, label) in enumerate(zip(codes, labels)):
         stats["label_counts"][label] += 1
 
         env = DevignEnv(code, label, max_steps=10)
@@ -91,7 +99,6 @@ def run_multiple_episodes(
 
     return stats
 
-
 if __name__ == "__main__":
     ### Load Devign dataset
     root_dir = os.path.abspath("./dataset/devign")
@@ -102,8 +109,8 @@ if __name__ == "__main__":
     # test_codes, test_labels = dataset["test"]
 
     ### LLM client setup
-    model_name = "llama3.2" ### ["llama3.2:3b", "mistral:7b", "llama3.1:8b", codellam:7b, deepseek-coder:6.7b, "qwen:2.5-7b", "qwen2.5-coder:7b", "qwen3:8b"]
-    ollama_url = "http://localhost:11434/api/chat"
+    model_name = args.model ### ["llama3.2:3b", "mistral:7b", "llama3.1:8b", codellama:7b, deepseek-coder:6.7b, "qwen:2.5-7b", "qwen2.5-coder:7b", "qwen3:8b"]
+    ollama_url = args.url ### e.g., "http://localhost:11434/api/chat"
     llm = OllamaClient(model=model_name, url=ollama_url)
 
     ### Run episodes on train_codes
@@ -111,7 +118,7 @@ if __name__ == "__main__":
         print("Running episodes on training set...")
         stats = run_multiple_episodes(
             dataset=dataset[dataset_name],
-            num_episodes=10,
+            num_episodes=args.n_epsds,
             llm_client=llm,
             output_dir=f"./dataset/devign_runs/{dataset_name}",
             use_jsonl=False,       # use_jsonl=True: all episodes in one JSONL file
