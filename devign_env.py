@@ -4,10 +4,10 @@ from analyzer import SimpleStaticAnalyzer
 def parse_action(action: str):
     """
     "check_pattern('buffer_overflow')" -> ("check_pattern", "buffer_overflow")
-    "report_vulnerability(42)"         -> ("report_vulnerability", "42")
+    "positive_alarm(42)"         -> ("positive_alarm", "42")
     "summarize_code()"                 -> ("summarize_code", None)
     """
-    action = action.strip()
+    action = action.split('\n')[0].strip()
     if "(" not in action or not action.endswith(")"):
         return action, None
     name, rest = action.split("(", 1)
@@ -19,7 +19,7 @@ def parse_action(action: str):
     return name.strip(), arg or None
 
 class DevignEnv:
-    def __init__(self, code, label, max_steps=10):
+    def __init__(self, code, label, max_steps=30):
         self.code = code
         self.label = int(label)  # 0 = safe, 1 = vulnerable
         self.max_steps = max_steps
@@ -91,13 +91,13 @@ class DevignEnv:
             self.suspected_line = self.analyzer.identify_vulnerable_line()
 
         # If agent reports vulnerability, evaluate correctness
-        elif name == "report_vulnerability":
+        elif name == "positive_alarm":
             # Correct only if this function is truly vulnerable
             reward = 1 if self.label == 1 else 0
             done = True
 
-        # If agent calls stop()
-        elif name == "stop()":
+        # If agent thinks no vulnerability, evaluate correctness
+        elif name == "negative_alarm()":
             reward = 1 if self.label == 0 else 0
             done = True
 

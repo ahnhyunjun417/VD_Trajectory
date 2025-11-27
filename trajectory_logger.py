@@ -18,6 +18,8 @@ class TrajectoryLogger:
             # Save each episode individually, easier for debugging
             out_path = os.path.join(self.output_dir, f"episode_{episode_id}.json")
             with open(out_path, "w", encoding="utf-8") as f:
-                json.dump(episode_data, f, indent=2)
+                temp = episode_data.copy()
+                temp["trajectory"] = episode_data["trajectory"][-1]
+                json.dump(temp, f, indent=2)
         
         return out_path
