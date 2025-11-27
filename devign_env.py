@@ -19,7 +19,7 @@ def parse_action(action: str):
     return name.strip(), arg or None
 
 class DevignEnv:
-    def __init__(self, code, label, max_steps=30):
+    def __init__(self, code, label, max_steps=10):
         self.code = code
         self.label = int(label)  # 0 = safe, 1 = vulnerable
         self.max_steps = max_steps
@@ -103,6 +103,7 @@ class DevignEnv:
 
         # safety cutoff
         if self.step_count >= self.max_steps:
+            reward = 1 if self.label == 0 else 0
             done = True
 
         self.done = done

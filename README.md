@@ -25,5 +25,5 @@ curl http://localhost:11434/api/generate -d '{"model": "llama3.2", "prompt": "he
 ### Changing Context Limit
 ```bash
 docker run -d --name ollama --gpus all -p 11434:11434 -e OLLAMA_CONTEXT_LENGTH=16000 -v ./ollama:/root/.ollama ollama/ollama
-docker run -d --name ollama -p 11434:11434 -e OLLAMA_RUNNERS=cpu -e OLLAMA_CONTEXT_LENGTH=32000 -v ./ollama:/root/.ollama ollama/ollama
+docker run -d --name ollama -p 11434:11434 -e OLLAMA_RUNNERS=cpu -e OLLAMA_CONTEXT_LENGTH=16000 -v ./ollama:/root/.ollama ollama/ollama
 ```

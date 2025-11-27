@@ -190,18 +190,3 @@ class SimpleStaticAnalyzer:
                     if self.has_deref_of_var(line, alias, {}):
                         return True
         return False
-
-    def identify_vulnerable_line(self) -> Optional[int]:
-        # buffer overflow
-        for i, line in enumerate(self.lines, start=1):
-            if any(f in line for f in ["strcpy", "strcat", "gets", "sprintf"]):
-                return i
-        # null deref
-        for i, line in enumerate(self.lines, start=1):
-            if ("*" in line or "->" in line) and "if(" not in line and "==" not in line and "!=" not in line:
-                return i
-        # detect_use_after_free
-        for i, line in enumerate(self.lines, start=1):
-            if "free(" in line:
-                return i
-        return -1

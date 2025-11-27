@@ -5,13 +5,13 @@ ACTION_LIST = [
     "summarize_code()",
     "list_variables()",
     "list_functions()",
-    "list_dataflows()",
+    # "list_dataflows()",
     "list_freed_variables()",
     "list_null_assigned_variables()",
     "check_pattern('buffer_overflow')",
     "check_pattern('null_deref')",
     "check_pattern('use_after_free')",
-    "identify_vulnerable_line()",
+    # "identify_vulnerable_line()",
     "positive_alarm(<int line_number>)",
     "negative_alarm()",
 ]
@@ -61,7 +61,7 @@ def build_prompt(state: Dict[str, Any]) -> str:
         pattern_str_lines.append(f"{k}: {v}")
     pattern_str = "\n".join(pattern_str_lines)
 
-    suspected_str = str(suspected_line) if suspected_line is not None else "(unknown)"
+    # suspected_str = str(suspected_line) if suspected_line is not None else "(unknown)"
 
     prompt = f"""
 You are a vulnerability detection agent analyzing a C/C++ function.
@@ -74,15 +74,14 @@ CURRENT CODE:
 VALID ACTIONS:
 {left_actions_str}
 
-CURRENT ANALYSIS STATE:
+CURRENT INFORMATION FROM PREVIOUS ACTIONS:
 - code summarization: {summary_str}
 - variables: {vars_str}
 - functions: {funcs_str}
-- dataflows: {flows_str}
 - freed variables: {freed_str}
 - null-assigned variables: {null_assigned_str}
-- suspected vulnerable line: {suspected_str}
-- check_pattern:
+
+CURRENT ANALYSIS STATE:
 {pattern_str}
 
 RULES:
@@ -91,9 +90,10 @@ RULES:
 - Use only actions in the updated current VALID ACTIONS list.
 - Do NOT repeat actions already taken. ONLY USE ACTIONS IN THE UPDATED VALID ACTIONS LIST.
 
-FINAL ACTION CONDITIONS:
-- If at least one check_pattern result is True, "positive_alarm(<line_number>)" with the suspected vulnerable line number
-- If ALL check_pattern results are False, "negative_alarm()"
+FINAL ACTION RULES:
+- If the CURRENT ANALYSIS STATE only has False, "negative_alarm()"
+- If at least one CURRENT ANALYSIS STATE is True, "positive_alarm(<line_number>)" with the suspected vulnerable line number
+
 
 Next action:
 """.strip()
@@ -106,4 +106,4 @@ def agent_policy(state: Dict[str, Any], llm_client: OllamaClient) -> str:
     prompt = build_prompt(state)
     raw_action = llm_client.chat(prompt)
     action = validate_action(raw_action)
-    return action
+    return action, prompt

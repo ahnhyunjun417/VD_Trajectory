@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--url", type=str, required=False, default="http://localhost:11434/api/chat", help="Ollama API URL")
 parser.add_argument("--model", type=str, required=False, default="llama3.2", help="[llama3.2:3b, mistral:7b, llama3.1:8b, codellama:7b, codegemma:7b, deepseek-coder:6.7b, qwen:2.5-7b, qwen2.5-coder:7b]")
 parser.add_argument("--n_epsds", type=int, required=False, default=10, help="Num of episodes for each dataset split (0 = all samples)")
-parser.add_argument("--max_steps", type=int, required=False, default=30, help="Limitation of the number of turns per episode")
+parser.add_argument("--max_steps", type=int, required=False, default=10, help="Limitation of the number of turns per episode")
 parser.add_argument("--seed", type=int, required=False, default=42, help="Random seed")
 args = parser.parse_args()
 
@@ -23,7 +23,7 @@ def run_episode(env: DevignEnv, llm_client, logger: TrajectoryLogger, episode_id
     trajectory = []
 
     for t in range(env.max_steps):
-        action = agent_policy(state, llm_client)
+        action, prompt = agent_policy(state, llm_client)
         next_state, reward, done = env.step(action)
 
         # Log step
@@ -32,7 +32,8 @@ def run_episode(env: DevignEnv, llm_client, logger: TrajectoryLogger, episode_id
             "state": state,
             "action": action,
             "reward": reward,
-            "done": done
+            # "prompt": prompt,
+            "done": done,
         })
 
         if done:
@@ -53,7 +54,7 @@ def run_multiple_episodes(
     dataset,
     llm_client,
     num_episodes: int = 0,
-    max_steps: int = 30,
+    max_steps: int = 15,
     seed: int = 42,
     output_dir="./dataset/devign_runs",
     use_jsonl=False,
