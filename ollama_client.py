@@ -17,7 +17,7 @@ class OllamaClient:
                 ],
                 "stream": False,
             },
-            timeout=60
+            timeout=300
         )
         data = response.json()
         return data["message"]["content"]
